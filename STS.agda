@@ -1,11 +1,10 @@
+open import Level
 open import Data.Empty
 open import Data.Bool
 open import Data.Nat hiding(zero)
 open import Data.Product
 open import Data.Sum
-open import Level
 open import Relation.Binary.Core
-open import Function
 open import Function.Injection
 
 open import Induction.Nat
@@ -81,9 +80,9 @@ simple-security-aexp : ∀ {exp σ σ' v v'} → ⊢ (aexp exp) ∶ low
                                          → v ≡ v'
 simple-security-aexp num sim (num v σ) (num .v σ') = refl
 simple-security-aexp (var x-low) (equal low-equal) (var x σ) (var .x σ') = low-equal x x-low
-simple-security-aexp (opa p q) l (op a₁ a₂ σ n v c₁ c₂) (op .a₁ .a₂ σ' n₁ v' d₁ d₂)
-  with simple-security-aexp p l c₁ d₁ | simple-security-aexp q l c₂ d₂
-simple-security-aexp (opa p q) l (op a₁ a₂ σ n v c₁ c₂) (op .a₁ .a₂ σ' .n .v d₁ d₂) | refl | refl = refl
+simple-security-aexp (opa type₁ type₂) l-equal (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁ .a₂ σ' n₁ v' b₁⇓ b₂⇓)
+  with simple-security-aexp type₁ l-equal a₁⇓ b₁⇓ | simple-security-aexp type₂ l-equal a₂⇓ b₂⇓
+simple-security-aexp (opa p q) l (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁ .a₂ σ' .n .v b₁⇓ b₂⇓) | refl | refl = refl
 
 
 simple-security-bexp : ∀ {exp σ σ' v v'} → ⊢ (bexp exp) ∶ low
@@ -91,11 +90,11 @@ simple-security-bexp : ∀ {exp σ σ' v v'} → ⊢ (bexp exp) ∶ low
                                          → (exp , σ) ⇓₂ v
                                          → (exp , σ') ⇓₂ v'
                                          → v ≡ v'
-simple-security-bexp true sim (true σ) (true σ') = refl
-simple-security-bexp false sim (false σ) (false σ') = refl
-simple-security-bexp (¬ type) sim (¬ σ b t e) (¬ σ' .b t₁ f)
-  with simple-security-bexp type sim e f
-simple-security-bexp (¬ type) sim (¬ σ b t e) (¬ σ' .b .t f) | refl = refl
+simple-security-bexp true l-equal (true σ) (true σ') = refl
+simple-security-bexp false l-equal (false σ) (false σ') = refl
+simple-security-bexp (¬ type) l-equal (¬ σ b t b⇓) (¬ σ' .b t₁ c⇓)
+  with simple-security-bexp type l-equal b⇓ c⇓
+simple-security-bexp (¬ type) sim (¬ σ b t b⇓) (¬ σ' .b .t c⇓) | refl = refl
 simple-security-bexp (opb type₁ type₂) sim (opb σ b₁ b₂ v t e₁ e₂) (opb σ' .b₁ .b₂ v' t' f₁ f₂)
   with simple-security-bexp type₁ sim e₁ f₁ | simple-security-bexp type₂ sim e₂ f₂
 simple-security-bexp (opb type₁ type₂) sim (opb σ b₁ b₂ v t e₁ e₂) (opb σ' .b₁ .b₂ .v .t f₁ f₂) | refl | refl = refl
@@ -118,7 +117,7 @@ confinment (asgnh x-high) (ass σ₁ x exp z x₂) = equal (λ y y-low → lemma
 confinment (seq type₁ type₂) (comp₁ σ₁ σ₂ s₁ s₂ s₂≠[] exec)
   with confinment type₁ exec
 ... | equal x = equal x
-confinment (seq type₁ type₂) (comp₂ σ₁ σ₂ s₁ s₁' s₂ s₁-ne-[] exec)
+confinment (seq type₁ type₂) (comp₂ σ₁ σ₂ s₁ s₁' s₂ s₁≠[] exec)
   with confinment type₁ exec
 ... | equal x = equal x
 confinment (while b-high type) (while₁ σ₂ s b b-true) = equal (λ x x-low → refl)
@@ -158,7 +157,6 @@ confined-sequence {ℕ.suc n} s-high (next n>0 step step-n) | σ=Lσ'' | inj₂ 
 if-low-equal : ∀ {x σ σ' z z'} → (b : Bool) → σ =L σ' → z ≡ z' → dom(x) ≡ low → (if b then z else σ x) ≡ (if b then z' else σ' x)
 if-low-equal true l-equal z=z' x-low = z=z'
 if-low-equal {x} false (equal f) z=z' x-low = f x x-low
-
 
 soundness' : ∀ {n m pc s σ₁ σ₁' σ₂ σ₂'} → Acc _<′_ n
                                         → Acc _<′_ m
