@@ -172,27 +172,30 @@ seq-decomp {ℕ.suc n} {[]} (next x (comp₂ σ σ' .[] s₁' s₂ s₁'≠[] ()
 seq-decomp {ℕ.suc .0} {skip} {.[]} (next _ (comp₁ σ σ' .skip .[] s₂≠[] step) stop)
   with s₂≠[] refl
 ... | ()
-seq-decomp {ℕ.suc n} {skip} (next _ (comp₁ σ σ' .skip s' s₂≠[] step) (next n>0 step' n-steps)) = 1 , (n , (σ' , (next (s≤s z≤n) step stop) , (next n>0 step' n-steps) , ≤′-suc (≤⇒≤′ n>0) , ≤′-refl))
+seq-decomp {ℕ.suc n} {skip} (next _ (comp₁ σ σ' .skip s' s₂≠[] step) (next n>0 step' n-steps))
+           = 1 , (n , (σ' , (next (s≤s z≤n) step stop) , (next n>0 step' n-steps) , ≤′-suc (≤⇒≤′ n>0) , ≤′-refl))
 seq-decomp {ℕ.suc n} {skip} (next _ (comp₂ σ' .σ' .skip .[] s₂ s₁'≠[] (skip .σ')) n-steps)
   with s₁'≠[] refl
 ... | ()
 seq-decomp {ℕ.suc .0} {ass x a} {.[]} (next _ (comp₁ σ σ' .(ass x a) .[] s₂≠[] step) stop)
   with s₂≠[] refl
 ... | ()
-seq-decomp {ℕ.suc n} {ass x a} (next _ (comp₁ σ σ' .(ass x a) s' s₂≠[] step) (next n>0 step' n-steps)) = 1 , (n , (σ' , (next (s≤s z≤n) step stop) , (next n>0 step' n-steps) , ≤′-suc (≤⇒≤′ n>0) , ≤′-refl))
-seq-decomp {ℕ.suc n} {ass x a} (next x₁ (comp₂ σ' .(λ x₁ → if x₁ == x then z else σ' x₁) .(ass x a) .[] s₂ s₁'≠[] (ass .σ' .x .a z x₂)) n-steps)
+seq-decomp {ℕ.suc n} {ass x a} (next _ (comp₁ σ σ' .(ass x a) s' s₂≠[] step) (next n>0 step' n-steps))
+           = 1 , (n , (σ' , (next (s≤s z≤n) step stop) , (next n>0 step' n-steps) , ≤′-suc (≤⇒≤′ n>0) , ≤′-refl))
+seq-decomp {ℕ.suc n} {ass x a} (next _ (comp₂ σ' .(λ x₁ → if x₁ == x then z else σ' x₁) .(ass x a) .[] s₂ s₁'≠[] (ass .σ' .x .a z x₂)) n-steps)
   with s₁'≠[] refl
 ... | ()
 
-seq-decomp {ℕ.suc .0} {comp s₁ s₂} {.[]} (next x (comp₁ σ σ' .(comp s₁ s₂) .[] ≠[] step) stop)
+seq-decomp {ℕ.suc .0} {comp s₁ s₂} {.[]} (next _ (comp₁ σ σ' .(comp s₁ s₂) .[] ≠[] step) stop)
   with ≠[] refl
 ... | ()
-seq-decomp {ℕ.suc n} {comp s₁ .[]} (next n>0 (comp₁ σ σ' .(comp s₁ []) s₂ x₁ (comp₁ .σ .σ' .s₁ .[] ≠[] step)) n-steps)
+seq-decomp {ℕ.suc n} {comp s₁ .[]} (next _ (comp₁ σ σ' .(comp s₁ []) s₂ _ (comp₁ .σ .σ' .s₁ .[] ≠[] step)) n-steps)
   with ≠[] refl
 ... | ()
-seq-decomp {ℕ.suc n} {comp s₁ s₂} {s₃} (next n>0 (comp₂ σ σ' .(comp s₁ s₂) s₁' .s₃ ≠[] step) n-steps)
+seq-decomp {ℕ.suc n} {comp s₁ s₂} (next n>0 (comp₂ σ σ' .(comp s₁ s₂) s₁' s₃ ≠[] step) n-steps)
   with seq-decomp n-steps
-... | k , l , σ'' , k-steps , l-steps , k<n , l<n = (ℕ.suc k) , (l , (σ'' , ((next (s≤s z≤n) step k-steps) , l-steps , ((s≤′s k<n) , ≤′-step l<n))))
+... | k , l , σ'' , k-steps , l-steps , k<n , l<n
+    = (ℕ.suc k) , (l , (σ'' , ((next (s≤s z≤n) step k-steps) , l-steps , ((s≤′s k<n) , ≤′-step l<n))))
 
 seq-decomp {ℕ.suc .0} {if x then s₁ else s₂ fi} {.[]} (next n>0 (comp₁ σ σ' .(if x then s₁ else s₂ fi) .[] ≠[] step) stop)
   with ≠[] refl
@@ -205,17 +208,19 @@ seq-decomp {ℕ.suc n} {if x then s₁ else .[] fi} (next n>0 (comp₁ σ .σ .(
 ... | ()
 seq-decomp {ℕ.suc n} {if x then s₁ else s₂ fi} (next x₁ (comp₂ σ .σ .(if x then s₁ else s₂ fi) .s₁ s₃ x₂ (if₁ .σ .s₁ .s₂ .x x₃ x₄ x₅)) n-steps)
   with seq-decomp n-steps
-... | k , l , σ' , k-steps , l-steps , k<n , l<n =
-            (ℕ.suc k) , (l , (σ' , (next (s≤s z≤n) (if₁ σ s₁ s₂ x x₃ x₄ x₅) k-steps , l-steps , ((s≤′s k<n) , ≤′-step l<n))))
+... | k , l , σ' , k-steps , l-steps , k<n , l<n
+    = (ℕ.suc k) , (l , (σ' , (next (s≤s z≤n) (if₁ σ s₁ s₂ x x₃ x₄ x₅) k-steps , l-steps , ((s≤′s k<n) , ≤′-step l<n))))
 seq-decomp {ℕ.suc n} {if x then s₁ else .s₁' fi} (next x₁ (comp₂ .σ' σ' .(if x then s₁ else s₁' fi) s₁' s₃ x₂ (if₂ .σ' .s₁ .s₁' .x x₃ x₄ x₅)) n-steps)
   with seq-decomp n-steps
-... | k , l , σ , k-steps , l-steps , k<n , l<n =
-            (ℕ.suc k) , (l , (σ , (next (s≤s z≤n) (if₂ σ' s₁ s₁' x x₃ x₄ x₅) k-steps , l-steps , ((s≤′s k<n) , ≤′-step l<n))))
+... | k , l , σ , k-steps , l-steps , k<n , l<n
+    = (ℕ.suc k) , (l , (σ , (next (s≤s z≤n) (if₂ σ' s₁ s₁' x x₃ x₄ x₅) k-steps , l-steps , ((s≤′s k<n) , ≤′-step l<n))))
 
 seq-decomp {ℕ.suc .0} {while x do s₁ od} {.[]} (next x₁ (comp₁ σ₂ .σ₂ .(while x do s₁ od) .[] ≠[] (while₂ .σ₂ .s₁ .x x₄)) stop)
   with ≠[] refl
 ... | ()
-seq-decomp {ℕ.suc n} {while x do s₁ od} (next x₁ (comp₁ .σ' σ' .(while x do s₁ od) s' x₂ (while₂ .σ' .s₁ .x x₄)) (next n>0 step n-steps)) = 1 , (n , (σ' , ((next (s≤s z≤n) (while₂ σ' s₁ x x₄) stop) , (next n>0 step n-steps) , (≤′-suc (≤⇒≤′ n>0) , ≤′-refl))))
+seq-decomp {ℕ.suc n} {while x do s₁ od} (next x₁ (comp₁ .σ' σ' .(while x do s₁ od) s' x₂ (while₂ .σ' .s₁ .x x₄)) (next n>0 step n-steps))
+           = 1 , (n , (σ' , ((next (s≤s z≤n) (while₂ σ' s₁ x x₄) stop) , (next n>0 step n-steps) , (≤′-suc (≤⇒≤′ n>0) , ≤′-refl))))
 seq-decomp {ℕ.suc n} {while x do s₁ od} (next x₁ (comp₂ σ₁ σ' .(while x do s₁ od) s₁' s₂ x₂ step) n-steps)
   with seq-decomp n-steps
-... | k , l , σ , k-steps , l-steps , k<n , l<n = (ℕ.suc k) , (l , (σ , ((next (s≤s z≤n) step k-steps) , l-steps , ((s≤′s k<n) , (≤′-step l<n)))))
+... | k , l , σ , k-steps , l-steps , k<n , l<n
+    = (ℕ.suc k) , (l , (σ , ((next (s≤s z≤n) step k-steps) , l-steps , ((s≤′s k<n) , (≤′-step l<n)))))
