@@ -165,30 +165,40 @@ soundness' : ∀ {n m pc s σ₁ σ₁' σ₂ σ₂'} → Acc _<′_ n
                                         → ⟨ s , σ₁' ⟩→ m ⟨ [] , σ₂' ⟩
                                         → σ₁ =L σ₁'
                                         → σ₂ =L σ₂'
-soundness' {ℕ.zero} {ℕ.zero} _ _ _ stop stop l-equal = l-equal
-soundness' {ℕ.zero} {ℕ.zero} _ _ _ stop (next () step m-steps) l-equal
-soundness' {ℕ.zero} {ℕ.zero} _ _ _ (next () step n-steps) stop l-equal
-soundness' {ℕ.zero} {ℕ.zero} _ _ _ (next () step n-steps) (next () step' m-steps) l-equal
-soundness' {ℕ.zero} {ℕ.suc m} _ _ _ stop (next n>0 () m-steps) l-equal
-soundness' {ℕ.zero} {ℕ.suc m} _ _ _ (next () step n-steps) m-steps l-equal
-soundness' {ℕ.suc n} {ℕ.zero} _ _ _ (next n>0 () n-steps) stop l-equal
-soundness' {ℕ.suc n} {ℕ.zero} _ _ _ n-steps (next () m-step m-steps) l-equal
+soundness' {ℕ.zero} {ℕ.zero} _ _ _  stop                    stop l-equal = l-equal
+soundness' {ℕ.zero} {ℕ.zero} _ _ _  stop                    (next () step m-steps) l-equal
+soundness' {ℕ.zero} {ℕ.zero} _ _ _  (next () step n-steps)  stop l-equal
+soundness' {ℕ.zero} {ℕ.zero} _ _ _  (next () step n-steps)  (next () step' m-steps) l-equal
+soundness' {ℕ.zero} {ℕ.suc m} _ _ _ stop                    (next n>0 () m-steps) l-equal
+soundness' {ℕ.zero} {ℕ.suc m} _ _ _ (next () step n-steps)  m-steps l-equal
+soundness' {ℕ.suc n} {ℕ.zero} _ _ _ (next n>0 () n-steps)   stop l-equal
+soundness' {ℕ.suc n} {ℕ.zero} _ _ _ n-steps                 (next () m-step m-steps) l-equal
 
 soundness' {ℕ.suc n} {ℕ.suc m} {low} {[]} _ _ _ (next n>0 () n-steps) m-steps l-equal
 
-soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ _ (next n>0 (skip σ₂) stop) (next n>0' (skip σ₂') stop) l-equal = l-equal
-soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ _ (next n>0 (skip σ₂) stop) (next n>0' (skip σ'') (next n>0'' () m-steps)) l-equal 
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ _ (next n>0 (skip σ) (next n>0' () n-steps)) m-steps l-equal
+soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ _ (next n>0 (skip σ)  stop)
+                                             (next m>0 (skip σ') stop) l-equal = l-equal
+soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ _ (next n>0 (skip σ) stop)
+                                            (next m>0 (skip σ') (next m>1 () m-steps)) l-equal 
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ _ (next n>0 (skip σ) (next n>1 () n-steps))
+                                           m-steps l-equal
 
-soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ (asgnh x-high) (next x₁ (ass σ₁ x exp z x') stop) (next x₄ (ass σ₁' .x .exp z₁ x₅) stop) (equal σ₁=σ₁') = equal (λ y y-low → lemma2 y-low x-high (σ₁=σ₁' y y-low))
-soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ (asgnh x₂) (next x₁ (ass σ₁ x exp z x-high) stop) (next x₄ (ass σ₁' .x .exp z₁ x₅) (next x₃ () m-steps)) l-equal
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (asgnh x₂) (next x₁ (ass σ₁ x exp z x-high) (next x₃ () n-steps)) (next x₅ (ass σ₁' .x .exp z₁ x₆) m-steps) l-equal
+soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ (asgnh x-high) (next n>0 (ass σ   x  exp z  exp⇓) stop)
+                                                          (next m>0 (ass σ' .x .exp z' exp⇓') stop) (equal σ₁=σ₁')
+        = equal (λ y y-low → lemma2 y-low x-high (σ₁=σ₁' y y-low))
+soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ (asgnh x-high) (next n>0 (ass σ   x  exp z  exp⇓)  stop)
+                                                         (next m>0 (ass σ' .x .exp z' exp⇓') (next m>1 () m-steps)) l-equal
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (asgnh x-high) (next n>0 (ass σ   x  exp z  exp⇓) (next n>1 () n-steps))
+                                                        (next m>0 (ass σ' .x .exp z' exp⇓') m-steps) l-equal
 
-soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ (asgnl x-low) (next x₁ (ass σ₁ x exp z x₃) stop) (next x₄ (ass σ₁' .x .exp z₁ x₅) stop) l-equal
-  with simple-security-aexp x-low l-equal x₃ x₅
+soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ (asgnl x-low) (next n>0 (ass σ   x  exp z  exp⇓)  stop)
+                                                         (next m>0 (ass σ' .x .exp z' exp⇓') stop) l-equal
+  with simple-security-aexp x-low l-equal exp⇓ exp⇓'
 ... | z=z' = equal (λ y y-low → if-low-equal (y == x) l-equal z=z' y-low)
-soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ (asgnl x-low) (next x₁ (ass σ₁ x exp z x₃) stop) (next x₄ (ass σ₁' .x .exp z₁ x₅) (next x₂ () m-steps)) l-equal
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (asgnl x-low) (next x₁ (ass σ₁ x exp z x₃) (next x₂ () n-steps)) (next x₅ (ass σ₁' .x .exp z₁ x₆) m-steps) l-equal
+soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ (asgnl x-low) (next n>0 (ass σ   x  exp z  exp⇓) stop)
+                                                        (next m>0 (ass σ' .x .exp z' exp⇓') (next m>1 () m-steps)) l-equal
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (asgnl x-low) (next n>0 (ass σ   x  exp z  exp⇓) (next n>1 () n-steps))
+                                                       (next m>0 (ass σ' .x .exp z' exp⇓') m-steps) l-equal
 
 soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (seq typeable₁ typeable₂) n-steps m-steps l-equal
   with seq-decomp n-steps | seq-decomp m-steps
@@ -198,32 +208,43 @@ soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (seq typeable₁ typeab
   with soundness' (f l l<n) (g h h<n) typeable₂ s₂ s₂' σ=Lσ'
 ... | σ₂=Lσ₂' = σ₂=Lσ₂'
 
-soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (ite b-high t₁ t₂) (next n>0 (if₁ σ' s' s₂ b _ _ x₁) n-steps) (next m>0 (if₁ σ'' .s' .s₂ .b _ _ x₂) m-steps) l-equal
+soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (ite b-high t₁ t₂) (next n>0 (if₁ σ   s  s'  b _ _ b⇓)  n-steps)
+                                                                        (next m>0 (if₁ σ' .s .s' .b _ _ b⇓') m-steps) l-equal
   with soundness' (f n ≤′-refl) (g m ≤′-refl) t₁ n-steps m-steps l-equal
 ... | σ₂=Lσ₂' = σ₂=Lσ₂'
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (ite b-low t₁ t₂) (next n>0 (if₁ σ' s' s'' b _ _ x₁) n-steps) (next m>0 (if₂ σ'' .s' .s'' .b _ _ x₂) m-steps) l-equal
-  with simple-security-bexp b-low l-equal x₁ x₂
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (ite b-low t₁ t₂) (next n>0 (if₁ σ   s  s'  b _ _ b⇓)  n-steps)
+                                                           (next m>0 (if₂ σ' .s .s' .b _ _ b⇓') m-steps) l-equal
+  with simple-security-bexp b-low l-equal b⇓ b⇓'
 ... | ()
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (ite b-low t₁ t₂) (next n>0 (if₂ σ' s'' s' b _ _ x₁) n-steps) (next m>0 (if₁ σ'' .s'' .s' .b _ _ x₂) m-steps) l-equal
-  with simple-security-bexp b-low l-equal x₁ x₂
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (ite b-low t₁ t₂) (next n>0 (if₂ σ   s  s'  b _ _ b⇓) n-steps)
+                                                           (next m>0 (if₁ σ' .s .s' .b _ _ b⇓') m-steps) l-equal
+  with simple-security-bexp b-low l-equal b⇓ b⇓'
 ... | ()
-soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (ite b-low t₁ t₂) (next n>0 (if₂ σ' s₁ s' b _ _ x₁) n-steps) (next m>0 (if₂ σ'' .s₁ .s' .b _ _ x₂) m-steps) l-equal
+soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (ite b-low t₁ t₂) (next n>0 (if₂ σ   s  s'  b _ _ b⇓)  n-steps)
+                                                                       (next m>0 (if₂ σ' .s .s' .b _ _ b⇓') m-steps) l-equal
   with soundness' (f n ≤′-refl) (g m ≤′-refl) t₂ n-steps m-steps l-equal
 ... | σ₂=Lσ₂' = σ₂=Lσ₂'
 
-soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (while b-low t) (next n>0 (while₁ σ s b b-true) n-steps) (next x₃ (while₁ σ' .s .b b-true') m-steps) l-equal
+soundness' {ℕ.suc n} {ℕ.suc m} {low} (acc f) (acc g) (while b-low t) (next n>0 (while₁ σ   s  b b⇓)  n-steps)
+                                                                     (next m>0 (while₁ σ' .s .b b⇓') m-steps) l-equal
   with soundness' (f n ≤′-refl) (g m ≤′-refl) (seq t (while b-low t)) n-steps m-steps l-equal
 ... | σ₂=Lσ₂' = σ₂=Lσ₂'
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₁ σ' s b x₂) n-steps) (next x₃ (while₂ σ'' .s .b x₄) m-steps) l-equal
-  with simple-security-bexp b-low l-equal x₂ x₄
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₁ σ   s  b b⇓)  n-steps)
+                                                         (next m>0 (while₂ σ' .s .b b⇓') m-steps) l-equal
+  with simple-security-bexp b-low l-equal b⇓ b⇓'
 ... | ()
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₂ σ' s b x₂) n-steps) (next x₃ (while₁ σ'' .s .b x) m-steps) l-equal
-  with simple-security-bexp b-low l-equal x₂ x
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₂ σ   s  b b⇓)  n-steps)
+                                                         (next m>0 (while₁ σ' .s .b b⇓') m-steps) l-equal
+  with simple-security-bexp b-low l-equal b⇓ b⇓'
 ... | ()
-soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ (while b-low t) (next n>0 (while₂ σ₂ s b x₂) stop) (next x₃ (while₂ σ₂' .s .b x) stop) l-equal = l-equal
-soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₂ σ₂ s b x₂) stop) (next  x₃ (while₂ σ' .s .b x) (next x₄ () m-steps)) l-equal
-soundness' {ℕ.suc n} {ℕ.suc .0} {low} _ _ (while b-low t) (next n>0 (while₂ σ s b x₂) (next x () n-steps)) (next x₄ (while₂ σ' .s .b x₅) stop) l-equal
-soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₂ σ s b x₂) (next x x₃ n-steps)) (next x₄ (while₂ σ' .s .b x₅) (next x₆ () m-steps)) l-equal
+soundness' {ℕ.suc .0} {ℕ.suc .0} {low} _ _ (while b-low t) (next n>0 (while₂ σ   s  b b⇓)  stop)
+                                                           (next m>0 (while₂ σ' .s .b b⇓') stop) l-equal = l-equal
+soundness' {ℕ.suc .0} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₂ σ   s  b b⇓)   stop)
+                                                          (next m>0 (while₂ σ' .s .b b⇓') (next m>1 () m-steps)) l-equal
+soundness' {ℕ.suc n} {ℕ.suc .0} {low} _ _ (while b-low t) (next n>0 (while₂ σ   s  b b⇓) (next n>1 () n-steps))
+                                                          (next m>0 (while₂ σ' .s .b b⇓') stop) l-equal
+soundness' {ℕ.suc n} {ℕ.suc m} {low} _ _ (while b-low t) (next n>0 (while₂ σ   s  b b⇓)  (next n>1 () n-steps))
+                                                         (next m>0 (while₂ σ' .s .b b⇓') (next m>1 () m-steps)) l-equal
 
 soundness' {ℕ.suc n} {ℕ.suc m} {high} _ _ typeable n-steps m-steps l-equal
   with confined-sequence typeable n-steps | confined-sequence typeable m-steps
