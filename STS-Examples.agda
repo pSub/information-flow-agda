@@ -39,3 +39,9 @@ example₃ = asgnh refl
 
 example₄ : [ low ]⊢ ass l₁ (opa (var l₁) (var l₂))
 example₄ = asgnl (opa (var refl) (var refl))
+
+example₅ : ⊢ aexp (opa (opa (var l₁) (num 5)) (var l₂)) ∶ high
+example₅ = higha
+
+example₆ : ⊬ aexp (opa (opa (var h₁) (num 5)) (var l₂)) ∶ low
+example₆ (opa (opa (var ()) num) (var l₂-low))
