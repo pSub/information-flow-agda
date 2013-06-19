@@ -3,6 +3,7 @@ open import Data.Empty
 open import Data.Bool
 open import Data.Nat
 open import Data.Nat.Properties
+open import Data.Sum
 open import Data.Product
 open import Relation.Binary.Core
 
@@ -20,17 +21,18 @@ data BExp : Set where
   opb : BExp → BExp → BExp
   opr : AExp → AExp → BExp
 
--- TODO: remove [] from Exp
 data Exp : Set where
-  [] : Exp
   skip : Exp
   ass : Var → AExp → Exp
   comp : Exp → Exp → Exp
   if_then_else_fi : BExp → Exp → Exp → Exp
   while_do_od : BExp → Exp → Exp
 
+data Stop : Set where
+  [] : Stop
+
 State = Var → ℕ
-Config = Exp × State
+Config = (Exp ⊎ Stop)  × State
 
 data _⇓₁_ : AExp × State → ℕ → Set where
   var : ∀ x σ → (var x , σ) ⇓₁ σ x
@@ -80,79 +82,32 @@ thm-BExp-det (opr σ a₁ a₂ z₁ z₂ p₁ q₁) (opr .σ .a₁ .a₂ z₃ z�
   with thm-AExp-det p₁ p₂ | thm-AExp-det q₁ q₂
 thm-BExp-det (opr σ a₁ a₂ z z' _ _) (opr .σ .a₁ .a₂ .z .z' _  _) | refl | refl = refl
 
-data ⟨_⟩→⟨_⟩ : Config → Config → Set where
-  skip   : ∀ σ → ⟨ skip , σ ⟩→⟨ [] , σ ⟩
-  ass    : ∀ σ v a z → (a , σ) ⇓ z → ⟨ ass v a , σ ⟩→⟨ [] , (λ x → if x == v then z else (σ x)) ⟩
-  comp₁  : ∀ σ σ' s₁ s₂ → s₂ ≢ [] → ⟨ s₁ , σ ⟩→⟨ [] , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→⟨ s₂ , σ' ⟩
-  comp₂  : ∀ σ σ' s₁ s₁' s₂ → s₁' ≢ [] → ⟨ s₁ , σ ⟩→⟨ s₁' , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→⟨ comp s₁' s₂ , σ' ⟩
-  if₁    : ∀ σ s₁ s₂ b → s₁ ≢ [] → s₂ ≢ [] → (b , σ) ⇓ true → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ s₁ , σ ⟩
-  if₂    : ∀ σ s₁ s₂ b → s₁ ≢ [] → s₂ ≢ [] → (b , σ) ⇓ false → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ s₂ , σ ⟩
-  while₁ : ∀ σ s b → (b , σ) ⇓ true → ⟨ while b do s od , σ ⟩→⟨ comp s (while b do s od) , σ ⟩
-  while₂ : ∀ σ s b → (b , σ) ⇓ false → ⟨ while b do s od , σ ⟩→⟨ [] , σ ⟩
+data ⟨_⟩→⟨_⟩ : Exp × State → Config → Set where
+  skip   : ∀ σ → ⟨ skip , σ ⟩→⟨ inj₂ [] , σ ⟩
+  ass    : ∀ σ v a z → (a , σ) ⇓ z → ⟨ ass v a , σ ⟩→⟨ inj₂ [] , (λ x → if x == v then z else (σ x)) ⟩
+  comp₁  : ∀ σ σ' s₁ s₂ → ⟨ s₁ , σ ⟩→⟨ inj₂ [] , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→⟨ inj₁ s₂ , σ' ⟩
+  comp₂  : ∀ σ σ' s₁ s₁' s₂ → ⟨ s₁ , σ ⟩→⟨ inj₁ s₁' , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→⟨ inj₁ (comp s₁' s₂) , σ' ⟩
+  if₁    : ∀ σ s₁ s₂ b → (b , σ) ⇓ true → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ inj₁ s₁ , σ ⟩
+  if₂    : ∀ σ s₁ s₂ b → (b , σ) ⇓ false → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ inj₁ s₂ , σ ⟩
+  while₁ : ∀ σ s b → (b , σ) ⇓ true → ⟨ while b do s od , σ ⟩→⟨ inj₁ (comp s (while b do s od)) , σ ⟩
+  while₂ : ∀ σ s b → (b , σ) ⇓ false → ⟨ while b do s od , σ ⟩→⟨ inj₂ [] , σ ⟩
 
 thm-Exp-det : ∀ {S S' S'' σ σ' σ''} → ⟨ S , σ ⟩→⟨ S'  , σ'  ⟩
                                     → ⟨ S , σ ⟩→⟨ S'' , σ'' ⟩
                                     → (S' ≡ S'') × (σ' ≡ σ'')
-thm-Exp-det (skip σ'') (skip .σ'') = refl , refl
-thm-Exp-det (ass σ'' v a z x) (ass .σ'' .v .a z' x₁)
+thm-Exp-det (skip σ) (skip .σ) = refl , refl
+thm-Exp-det (ass σ v a z x) (ass .σ .v .a z' x₁)
   with thm-AExp-det x x₁
-thm-Exp-det (ass σ'' v a z x) (ass .σ'' .v .a .z x₁) | refl = refl , refl
+thm-Exp-det (ass σ v a z x) (ass .σ .v .a .z x₁) | refl = refl , refl
 
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[]' q)
-  with thm-Exp-det p q
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₁ .σ .σ' .s₁ .s₂ s₂≠[]' q) | refl , refl = refl , refl
-
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₂ .σ σ'' .s₁ [] .s₂ ne[] q)
-  with ne[] refl
-... | ()
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₂ .σ σ'' .s₁ skip .s₂ ne[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₂ .σ σ'' .s₁ (ass x x₁) .s₂ ne[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₂ .σ σ'' .s₁ (comp s₁' s₁'') .s₂ ne[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₂ .σ σ'' .s₁ if x then s₁' else s₁'' fi .s₂ ne[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₁ σ σ' s₁ s₂ s₂≠[] p) (comp₂ .σ σ'' .s₁ while x do s₁' od .s₂ ne[] q)
-  with thm-Exp-det p q
-... | () , _
-
-
-thm-Exp-det (comp₂ σ σ' s₁ [] s₂ ne[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[] q)
-  with ne[] refl
-... | ()
-thm-Exp-det (comp₂ σ σ' s₁ skip s₂ ne[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₂ σ σ' s₁ (ass x x₁) s₂ ne[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₂ σ σ' s₁ (comp s₁' s₁'') s₂ ne[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₂ σ σ' s₁ if x then s₁' else s₁'' fi s₂ ne[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[] q)
-  with thm-Exp-det p q
-... | () , _
-thm-Exp-det (comp₂ σ σ' s₁ while x do s₁' od s₂ ne[] p) (comp₁ .σ σ'' .s₁ .s₂ s₂≠[] q)
-  with thm-Exp-det p q
-... | () , _
-
-thm-Exp-det (comp₂ σ σ' s₁ s₁' s₂ ne[] p) (comp₂ .σ σ'' .s₁ s₁'' .s₂ ne[]' q)
-  with thm-Exp-det p q
-thm-Exp-det (comp₂ σ σ' s₁ s₁' s₂ ne[] p) (comp₂ .σ .σ' .s₁ .s₁' .s₂ ne[]' q) | refl , refl = refl , refl
-
-thm-Exp-det (if₁ σ'' s₁ s₂ b _ _ _) (if₁ .σ'' .s₁ .s₂ .b _ _ _) = refl , refl
-thm-Exp-det (if₁ σ'' s₁ s₂ b _ _ p) (if₂ .σ'' .s₁ .s₂ .b _ _ q)
+thm-Exp-det (if₁ σ'' s₁ s₂ b _) (if₁ .σ'' .s₁ .s₂ .b _) = refl , refl
+thm-Exp-det (if₁ σ'' s₁ s₂ b p) (if₂ .σ'' .s₁ .s₂ .b q)
   with thm-BExp-det p q
 ... | ()
-thm-Exp-det (if₂ σ'' S'' S' b _ _ p) (if₁ .σ'' .S'' .S' .b _ _ q)
+thm-Exp-det (if₂ σ'' S'' S' b p) (if₁ .σ'' .S'' .S' .b q)
   with thm-BExp-det p q
 ... | ()
-thm-Exp-det (if₂ σ'' s₁ S'' b _ _ _) (if₂ .σ'' .s₁ .S'' .b _ _ _) = refl , refl
+thm-Exp-det (if₂ σ'' s₁ S'' b _) (if₂ .σ'' .s₁ .S'' .b _) = refl , refl
 
 thm-Exp-det (while₁ σ'' s b _ ) (while₁ .σ'' .s .b _) = refl , refl
 thm-Exp-det (while₁ σ'' s b p) (while₂ .σ'' .s .b q)
@@ -162,6 +117,20 @@ thm-Exp-det (while₂ σ'' s b p) (while₁ .σ'' .s .b q)
   with thm-BExp-det p q
 ... | ()
 thm-Exp-det (while₂ σ'' s b p) (while₂ .σ'' .s .b q) = refl , refl
+
+thm-Exp-det (comp₁ σ σ' s₁ s₂ p) (comp₁ .σ σ'' .s₁ .s₂ q)
+  with thm-Exp-det p q
+thm-Exp-det (comp₁ σ σ' s₁ s₂ p) (comp₁ .σ .σ' .s₁ .s₂ q) | refl , refl = refl , refl
+
+thm-Exp-det (comp₁ σ σ' s₁ s₂ p) (comp₂ .σ σ'' .s₁ s₁' .s₂ q)
+  with thm-Exp-det p q
+... | () , _
+thm-Exp-det (comp₂ σ σ' s₁ s₁' s₂ p) (comp₁ .σ σ'' .s₁ .s₂ q)
+  with thm-Exp-det p q
+... | () , _
+thm-Exp-det (comp₂ σ σ' s₁ s₁' s₂ p) (comp₂ .σ σ'' .s₁ s₁'' .s₂  q)
+  with thm-Exp-det p q
+thm-Exp-det (comp₂ σ σ' s₁ s₁' s₂ p) (comp₂ .σ .σ' .s₁ .s₁' .s₂ q) | refl , refl = refl , refl
 
 data ⟨_⟩→_⟨_⟩ : Config → ℕ → Config → Set where
   stop : ∀ {σ} → ⟨ [] , σ ⟩→ 0 ⟨ [] , σ ⟩
