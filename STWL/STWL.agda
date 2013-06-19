@@ -80,16 +80,15 @@ thm-BExp-det (opr σ a₁ a₂ z₁ z₂ p₁ q₁) (opr .σ .a₁ .a₂ z₃ z�
   with thm-AExp-det p₁ p₂ | thm-AExp-det q₁ q₂
 thm-BExp-det (opr σ a₁ a₂ z z' _ _) (opr .σ .a₁ .a₂ .z .z' _  _) | refl | refl = refl
 
-
 data ⟨_⟩→⟨_⟩ : Config → Config → Set where
   skip   : ∀ σ → ⟨ skip , σ ⟩→⟨ [] , σ ⟩
-  ass    : ∀ σ v a z → (a , σ) ⇓₁ z → ⟨ ass v a , σ ⟩→⟨ [] , (λ x → if x == v then z else (σ x)) ⟩
+  ass    : ∀ σ v a z → (a , σ) ⇓ z → ⟨ ass v a , σ ⟩→⟨ [] , (λ x → if x == v then z else (σ x)) ⟩
   comp₁  : ∀ σ σ' s₁ s₂ → s₂ ≢ [] → ⟨ s₁ , σ ⟩→⟨ [] , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→⟨ s₂ , σ' ⟩
   comp₂  : ∀ σ σ' s₁ s₁' s₂ → s₁' ≢ [] → ⟨ s₁ , σ ⟩→⟨ s₁' , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→⟨ comp s₁' s₂ , σ' ⟩
-  if₁    : ∀ σ s₁ s₂ b → s₁ ≢ [] → s₂ ≢ [] → (b , σ) ⇓₂ true → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ s₁ , σ ⟩
-  if₂    : ∀ σ s₁ s₂ b → s₁ ≢ [] → s₂ ≢ [] → (b , σ) ⇓₂ false → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ s₂ , σ ⟩
-  while₁ : ∀ σ s b → (b , σ) ⇓₂ true → ⟨ while b do s od , σ ⟩→⟨ comp s (while b do s od) , σ ⟩
-  while₂ : ∀ σ s b → (b , σ) ⇓₂ false → ⟨ while b do s od , σ ⟩→⟨ [] , σ ⟩
+  if₁    : ∀ σ s₁ s₂ b → s₁ ≢ [] → s₂ ≢ [] → (b , σ) ⇓ true → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ s₁ , σ ⟩
+  if₂    : ∀ σ s₁ s₂ b → s₁ ≢ [] → s₂ ≢ [] → (b , σ) ⇓ false → ⟨ if b then s₁ else s₂ fi , σ ⟩→⟨ s₂ , σ ⟩
+  while₁ : ∀ σ s b → (b , σ) ⇓ true → ⟨ while b do s od , σ ⟩→⟨ comp s (while b do s od) , σ ⟩
+  while₂ : ∀ σ s b → (b , σ) ⇓ false → ⟨ while b do s od , σ ⟩→⟨ [] , σ ⟩
 
 thm-Exp-det : ∀ {S S' S'' σ σ' σ''} → ⟨ S , σ ⟩→⟨ S'  , σ'  ⟩
                                     → ⟨ S , σ ⟩→⟨ S'' , σ'' ⟩

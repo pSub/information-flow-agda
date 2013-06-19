@@ -75,8 +75,8 @@ data noninterferent_ : Stmt → Set where
   
 simple-security-aexp : ∀ {exp σ σ' v v'} → ⊢ (aexp exp) ∶ low
                                          → σ =L σ'
-                                         → (exp , σ) ⇓₁ v
-                                         → (exp , σ') ⇓₁ v'
+                                         → (exp , σ) ⇓ v
+                                         → (exp , σ') ⇓ v'
                                          → v ≡ v'
 simple-security-aexp num sim (num v σ) (num .v σ') = refl
 simple-security-aexp (var x-low) (equal low-equal) (var x σ) (var .x σ') = low-equal x x-low
@@ -87,8 +87,8 @@ simple-security-aexp (opa p q) l (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁
 
 simple-security-bexp : ∀ {exp σ σ' v v'} → ⊢ (bexp exp) ∶ low
                                          → σ =L σ'
-                                         → (exp , σ) ⇓₂ v
-                                         → (exp , σ') ⇓₂ v'
+                                         → (exp , σ) ⇓ v
+                                         → (exp , σ') ⇓ v'
                                          → v ≡ v'
 simple-security-bexp true l-equal (true σ) (true σ') = refl
 simple-security-bexp false l-equal (false σ) (false σ') = refl
