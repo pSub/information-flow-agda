@@ -37,25 +37,37 @@ data _⇓₁_ : AExp × State → ℕ → Set where
   num : ∀ n σ → (num n , σ) ⇓₁ n
   op : ∀ a₁ a₂ σ n m → (a₁ , σ) ⇓₁ n → (a₂ , σ) ⇓₁ m → (opa a₁ a₂ , σ) ⇓₁ m
 
-thm-AExp-det : ∀ {conf z z'} → conf ⇓₁ z
-                             → conf ⇓₁ z'
-                             → z ≡ z'
-thm-AExp-det (var x σ) (var .x .σ) = refl
-thm-AExp-det (num z' σ) (num .z' .σ) = refl
-thm-AExp-det (op a₁ a₂ σ n m p₁ q₁) (op .a₁ .a₂ .σ n' m' p₂ q₂)
-  with thm-AExp-det p₁ p₂ | thm-AExp-det q₁ q₂
-thm-AExp-det (op a₁ a₂ σ n m _ _) (op .a₁ .a₂ .σ .n .m _ _) | refl | refl = refl
-
 data _⇓₂_ : BExp × State → Bool → Set where
   true : ∀ σ → (true , σ) ⇓₂ true
   false : ∀ σ → (false , σ) ⇓₂ false
   ¬ : ∀ σ b t → (b , σ) ⇓₂ t → (¬ b , σ) ⇓₂ not t
   opb : ∀ σ b₁ b₂ t₁ t₂ → (b₁ , σ) ⇓₂ t₁ → (b₂ , σ) ⇓₂ t₂ → (opb b₁ b₂ , σ) ⇓₂ t₁
   opr : ∀ σ a₁ a₂ z₁ z₂ → (a₁ , σ) ⇓₁ z₁ → (a₂ , σ) ⇓₁ z₂ → (opr a₁ a₂ , σ) ⇓₂ true
+  
+record Eval (e : Set) (v : Set) : Set₁ where
+  field _⇓_ : e × State → v → Set
+  
+evalAExp : Eval AExp ℕ
+evalAExp = record { _⇓_ = _⇓₁_ }
 
-thm-BExp-det : ∀ {conf z z'} → conf ⇓₂ z
-                             → conf ⇓₂ z'
-                             → z ≡ z'
+evalBExp : Eval BExp Bool
+evalBExp = record { _⇓_ = _⇓₂_ }
+
+_⇓_ : {e v : Set} → {{eval : Eval e v}} → e × State → v → Set
+_⇓_ {{eval}} = Eval._⇓_ eval
+
+thm-AExp-det : ∀ {conf} → ∀ {z z' : ℕ} → conf ⇓ z
+                                       → conf ⇓ z'
+                                       → z ≡ z'
+thm-AExp-det (var x σ) (var .x .σ) = refl
+thm-AExp-det (num z' σ) (num .z' .σ) = refl
+thm-AExp-det (op a₁ a₂ σ n m p₁ q₁) (op .a₁ .a₂ .σ n' m' p₂ q₂)
+  with thm-AExp-det p₁ p₂ | thm-AExp-det q₁ q₂
+thm-AExp-det (op a₁ a₂ σ n m _ _) (op .a₁ .a₂ .σ .n .m _ _) | refl | refl = refl
+
+thm-BExp-det : ∀ {conf} → ∀ {z z' : Bool} → conf ⇓ z
+                                          → conf ⇓ z'
+                                          → z ≡ z'
 thm-BExp-det (true σ) (true .σ) = refl
 thm-BExp-det (false σ) (false .σ) = refl
 thm-BExp-det (¬ σ b t p) (¬ .σ .b t₁ q)
@@ -67,6 +79,7 @@ thm-BExp-det (opb σ b₁ b₂ z t _ _) (opb .σ .b₁ .b₂ .z .t _ _) | refl |
 thm-BExp-det (opr σ a₁ a₂ z₁ z₂ p₁ q₁) (opr .σ .a₁ .a₂ z₃ z₄ p₂ q₂)
   with thm-AExp-det p₁ p₂ | thm-AExp-det q₁ q₂
 thm-BExp-det (opr σ a₁ a₂ z z' _ _) (opr .σ .a₁ .a₂ .z .z' _  _) | refl | refl = refl
+
 
 data ⟨_⟩→⟨_⟩ : Config → Config → Set where
   skip   : ∀ σ → ⟨ skip , σ ⟩→⟨ [] , σ ⟩
@@ -224,3 +237,4 @@ seq-decomp {ℕ.suc n} {while x do s₁ od} (next x₁ (comp₂ σ₁ σ' .(whil
   with seq-decomp n-steps
 ... | k , l , σ , k-steps , l-steps , k<n , l<n
     = (ℕ.suc k) , (l , (σ , ((next (s≤s z≤n) step k-steps) , l-steps , ((s≤′s k<n) , (≤′-step l<n)))))
+
