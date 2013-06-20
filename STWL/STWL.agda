@@ -139,14 +139,6 @@ data ⟨_⟩→_⟨_⟩ : Config → ℕ → Config → Set where
 data _⟶_ : Config → State → Set where
   eval : ∀ {n c σ} → ⟨ c ⟩→ n ⟨ inj₂ [] , σ ⟩ → c ⟶ σ
 
---≤′-suc : ∀ {n m} → n ≤′ m → ℕ.suc n ≤′ ℕ.suc m
---≤′-suc ≤′-refl = ≤′-refl
---≤′-suc (≤′-step le) = ≤′-step (≤′-suc le)
-
-≤-step : ∀ {m n} → m ≤ n → m ≤ ℕ.suc n
-≤-step z≤n       = z≤n
-≤-step (s≤s m≤n) = s≤s (≤-step m≤n)
-
 seq-decomp : ∀ {s₁ s₂ σ₁ σ₂} → ∀ n →  ⟨ inj₁ (comp s₁ s₂) , σ₁ ⟩→ n ⟨ inj₂ [] , σ₂ ⟩
                                       → ∃ \i → ∃ \j → ∃ \σ → ⟨ inj₁ s₁ , σ₁ ⟩→ i ⟨ inj₂ [] , σ ⟩
                                                              × ⟨ inj₁ s₂ , σ ⟩→ j ⟨ inj₂ [] , σ₂ ⟩
