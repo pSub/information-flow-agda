@@ -2,7 +2,7 @@ open import Level
 open import Data.Empty
 open import Data.Bool
 open import Data.Nat
-open import Data.Nat.Properties hiding (≤-step)
+open import Data.Nat.Properties
 open import Data.Sum
 open import Data.Product
 open import Relation.Binary.Core
