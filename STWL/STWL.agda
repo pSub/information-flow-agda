@@ -32,7 +32,7 @@ data Stop : Set where
   [] : Stop
 
 State = Var → ℕ
-Config = (Exp ⊎ Stop)  × State
+Config = (Exp ⊎ Stop) × State
 
 data _⇓₁_ : AExp × State → ℕ → Set where
   var : ∀ x σ → (var x , σ) ⇓₁ σ x
@@ -134,7 +134,10 @@ thm-Exp-det (comp₂ σ σ' s₁ s₁' s₂ p) (comp₂ .σ .σ' .s₁ .s₁' .s
 
 data ⟨_⟩→_⟨_⟩ : Config → ℕ → Config → Set where
   stop : ∀ {σ} → ⟨ inj₂ [] , σ ⟩→ 0 ⟨ inj₂ [] , σ ⟩
-  next : ∀ {n σ σ' σ'' s s'} → n > 0 → ⟨ s , σ ⟩→⟨ s' , σ' ⟩ → ⟨ s' , σ' ⟩→ (pred n) ⟨ inj₂ [] , σ'' ⟩ → ⟨ inj₁ s , σ ⟩→ n ⟨ inj₂ [] , σ'' ⟩
+  next : ∀ {n σ σ'' s conf} → n > 0
+                             → ⟨ s , σ ⟩→⟨ conf ⟩
+                             → ⟨ conf ⟩→ (pred n) ⟨ inj₂ [] , σ'' ⟩
+                             → ⟨ inj₁ s , σ ⟩→ n ⟨ inj₂ [] , σ'' ⟩
 
 data _⟶_ : Config → State → Set where
   eval : ∀ {n c σ} → ⟨ c ⟩→ n ⟨ inj₂ [] , σ ⟩ → c ⟶ σ
@@ -144,9 +147,9 @@ seq-decomp : ∀ {s₁ s₂ σ₁ σ₂} → ∀ n →  ⟨ inj₁ (comp s₁ s�
                                                              × ⟨ inj₁ s₂ , σ ⟩→ j ⟨ inj₂ [] , σ₂ ⟩
                                                              × i <′ n × j <′ n
 seq-decomp ℕ.zero (next () step n-steps)
-seq-decomp (ℕ.suc n) (next n>0 (comp₁ σ σ' s₁ s₂ step₁) (next n-1>0 step₂ n-1-steps))
-           = 1 , n , σ' , next (s≤s z≤n) step₁ stop , (next n-1>0 step₂ n-1-steps) , s≤′s (≤⇒≤′ n-1>0) , ≤′-refl
-seq-decomp (ℕ.suc n) (next {.(ℕ.suc n)} n>0 (comp₂ σ₁ σ' s₁ s₁' s₂ step) n-steps)
+seq-decomp (ℕ.suc n) (next n>0 (comp₁ σ σ' s₁ s₂ step₁) (next >0 step₂ n-steps))
+           = 1 , n , σ' , (next (s≤s z≤n) step₁ stop) , (next >0 step₂ n-steps) , s≤′s (≤⇒≤′ >0) , ≤′-refl
+seq-decomp (ℕ.suc n) (next n>0 (comp₂ σ₁ σ' s₁ s₁' s₂ step) n-steps)
   with seq-decomp n n-steps
 ... | k , l , σ'' , k-steps , l-steps , k<n , l<n = ℕ.suc k ,
                                                       l ,
