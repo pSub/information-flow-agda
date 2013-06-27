@@ -26,22 +26,22 @@ h₂ = h 2
 
 open import STS Var dom _==_
 
-example₁ : [ low ]⊬ ass l₁ (opa (var h₁) (var l₂))
+example₁ : [ low ]⊬ ass l₁ (opₐ (var h₁) (var l₂))
 example₁ (sub (asgnh ()))
 example₁ (asgnh ())
-example₁ (asgnl (opa (var ()) (var x)))
+example₁ (asgnl (opₐ (var ()) (var x)))
 
-example₂ : [ high ]⊢ if (opr (var h₂) (num 0)) then (ass h₂ (num 0)) else (ass h₂ (num 1)) fi
+example₂ : [ high ]⊢ if (opᵣ (var h₂) (num 0)) then (ass h₂ (num 0)) else (ass h₂ (num 1)) fi
 example₂ = ite highb (asgnh refl) (asgnh refl)
 
-example₃ : [ low ]⊢ ass h₁ (opa (var l₁) (var l₂))
+example₃ : [ low ]⊢ ass h₁ (opₐ (var l₁) (var l₂))
 example₃ = asgnh refl
 
-example₄ : [ low ]⊢ ass l₁ (opa (var l₁) (var l₂))
-example₄ = asgnl (opa (var refl) (var refl))
+example₄ : [ low ]⊢ ass l₁ (opₐ (var l₁) (var l₂))
+example₄ = asgnl (opₐ (var refl) (var refl))
 
-example₅ : ⊢ aexp (opa (opa (var l₁) (num 5)) (var l₂)) ∶ high
+example₅ : ⊢ aexp (opₐ (opₐ (var l₁) (num 5)) (var l₂)) ∶ high
 example₅ = higha
 
-example₆ : ⊬ aexp (opa (opa (var h₁) (num 5)) (var l₂)) ∶ low
-example₆ (opa (opa (var ()) num) (var l₂-low))
+example₆ : ⊬ aexp (opₐ (opₐ (var h₁) (num 5)) (var l₂)) ∶ low
+example₆ (opₐ (opₐ (var ()) num) (var l₂-low))

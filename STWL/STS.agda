@@ -24,13 +24,13 @@ data Exp' : Set where
 data ⊢_∶_ : Exp' → Dom → Set where
   num : ∀ {n} → ⊢ aexp (num n) ∶ low
   var : ∀ {x} → dom x ≡ low →  ⊢ aexp (var x) ∶ low
-  opa : ∀ {a₁ a₂} → ⊢ (aexp a₁) ∶ low → ⊢ (aexp a₂) ∶ low → ⊢ aexp (opa a₁ a₂) ∶ low
+  opₐ : ∀ {a₁ a₂} → ⊢ (aexp a₁) ∶ low → ⊢ (aexp a₂) ∶ low → ⊢ aexp (opₐ a₁ a₂) ∶ low
 
   true  : ⊢ bexp true ∶ low
   false : ⊢ bexp false ∶ low
   ¬     : ∀ {b} → ⊢ (bexp b) ∶ low → ⊢ bexp (¬ b) ∶ low
-  opb   : ∀ {b₁ b₂} → ⊢ (bexp b₁) ∶ low → ⊢ (bexp b₂) ∶ low → ⊢ bexp (opb b₁ b₂) ∶ low
-  opr   : ∀ {a₁ a₂} → ⊢ (aexp a₁) ∶ low → ⊢ (aexp a₂) ∶ low → ⊢ bexp (opr a₁ a₂) ∶ low
+  opₚ   : ∀ {b₁ b₂} → ⊢ (bexp b₁) ∶ low → ⊢ (bexp b₂) ∶ low → ⊢ bexp (opₚ b₁ b₂) ∶ low
+  opᵣ   : ∀ {a₁ a₂} → ⊢ (aexp a₁) ∶ low → ⊢ (aexp a₂) ∶ low → ⊢ bexp (opᵣ a₁ a₂) ∶ low
   higha : ∀ {a} → ⊢ (aexp a) ∶ high
   highb : ∀ {b} → ⊢ (bexp b) ∶ high
 
@@ -81,9 +81,9 @@ simple-security-aexp : ∀ {exp σ σ' v v'} → ⊢ (aexp exp) ∶ low
                                          → v ≡ v'
 simple-security-aexp num sim (num v σ) (num .v σ') = refl
 simple-security-aexp (var x-low) (equal low-equal) (var x σ) (var .x σ') = low-equal x x-low
-simple-security-aexp (opa type₁ type₂) l-equal (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁ .a₂ σ' n₁ v' b₁⇓ b₂⇓)
+simple-security-aexp (opₐ type₁ type₂) l-equal (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁ .a₂ σ' n₁ v' b₁⇓ b₂⇓)
   with simple-security-aexp type₁ l-equal a₁⇓ b₁⇓ | simple-security-aexp type₂ l-equal a₂⇓ b₂⇓
-simple-security-aexp (opa p q) l (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁ .a₂ σ' .n .v b₁⇓ b₂⇓) | refl | refl = refl
+simple-security-aexp (opₐ p q) l (op a₁ a₂ σ n v a₁⇓ a₂⇓) (op .a₁ .a₂ σ' .n .v b₁⇓ b₂⇓) | refl | refl = refl
 
 
 simple-security-bexp : ∀ {exp σ σ' v v'} → ⊢ (bexp exp) ∶ low
@@ -96,12 +96,12 @@ simple-security-bexp false l-equal (false σ) (false σ') = refl
 simple-security-bexp (¬ type) l-equal (¬ σ b t b⇓) (¬ σ' .b t₁ c⇓)
   with simple-security-bexp type l-equal b⇓ c⇓
 simple-security-bexp (¬ type) sim (¬ σ b t b⇓) (¬ σ' .b .t c⇓) | refl = refl
-simple-security-bexp (opb type₁ type₂) sim (opb σ b₁ b₂ v t e₁ e₂) (opb σ' .b₁ .b₂ v' t' f₁ f₂)
+simple-security-bexp (opₚ type₁ type₂) sim (opₚ σ b₁ b₂ v t e₁ e₂) (opₚ σ' .b₁ .b₂ v' t' f₁ f₂)
   with simple-security-bexp type₁ sim e₁ f₁ | simple-security-bexp type₂ sim e₂ f₂
-simple-security-bexp (opb type₁ type₂) sim (opb σ b₁ b₂ v t e₁ e₂) (opb σ' .b₁ .b₂ .v .t f₁ f₂) | refl | refl = refl
-simple-security-bexp (opr type₁ type₂) sim (opr σ a₁ a₂ z₁ z₂ e₁ e₂) (opr σ' .a₁ .a₂ z₁' z₂' f₁ f₂)
+simple-security-bexp (opₚ type₁ type₂) sim (opₚ σ b₁ b₂ v t e₁ e₂) (opₚ σ' .b₁ .b₂ .v .t f₁ f₂) | refl | refl = refl
+simple-security-bexp (opᵣ type₁ type₂) sim (opᵣ σ a₁ a₂ z₁ z₂ e₁ e₂) (opᵣ σ' .a₁ .a₂ z₁' z₂' f₁ f₂)
   with simple-security-aexp type₁ sim e₁ f₁ | simple-security-aexp type₂ sim e₂ f₂
-simple-security-bexp (opr type₁ type₂) sim (opr σ a₁ a₂ z₁ z₂ e₁ e₂) (opr σ' .a₁ .a₂ .z₁ .z₂ f₁ f₂) | refl | refl = refl
+simple-security-bexp (opᵣ type₁ type₂) sim (opᵣ σ a₁ a₂ z₁ z₂ e₁ e₂) (opᵣ σ' .a₁ .a₂ .z₁ .z₂ f₁ f₂) | refl | refl = refl
 
 -- TODO: Proof these lemmata
 postulate
