@@ -7,7 +7,7 @@ open import Data.Sum
 open import Data.Product
 open import Relation.Binary.Core
 
-module STWL (Var : Set) (_==_ : Var → Var → Bool) where
+module OperationalSemantics (Var : Set) (_==_ : Var → Var → Bool) where
 
 data AExp : Set where
   var : Var → AExp

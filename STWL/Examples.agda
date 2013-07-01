@@ -1,12 +1,12 @@
-module STS-Examples where
+module Examples where
 
 open import Data.Empty
 open import Data.Bool
 open import Data.Nat
 open import Relation.Binary.Core
 
-open import Domain
-open import STWL
+open import SecurityDomain
+open import OperationalSemantics
 
 data Var : Set where
   l : ℕ → Var
@@ -24,7 +24,7 @@ l₂ = l 2
 h₁ = h 1
 h₂ = h 2
 
-open import STS Var dom _==_
+open import SecurityTypeSystem Var dom _==_
 
 example₁ : [ low ]⊬ ass l₁ (opₐ (var h₁) (var l₂))
 example₁ (sub (asgnh ()))

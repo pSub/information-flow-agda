@@ -11,11 +11,11 @@ open import Function.Injection
 open import Induction.Nat
 open import Induction.WellFounded
 
-open import Domain
+open import SecurityDomain
 
-module STS (Var : Set) (dom : Var → Dom) (_==_ : Var → Var → Bool) where
+module SecurityTypeSystem (Var : Set) (dom : Var → Dom) (_==_ : Var → Var → Bool) where
 
-open import STWL Var  _==_ renaming (Exp to Stmt)
+open import OperationalSemantics Var  _==_ renaming (Exp to Stmt)
 
 data Exp' : Set where
   aexp : AExp → Exp'
