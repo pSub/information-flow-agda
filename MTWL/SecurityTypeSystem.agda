@@ -39,8 +39,8 @@ data ⊢_∶_ : Exp' → Dom → Set where
 
 data ⊢_ : Stmt → Set where
   skip  : ⊢ skip
-  asgnh : ∀ {x exp} → dom x ≡ high → ⊢ (ass x exp)
-  asgnl : ∀ {x exp} → ⊢ (aexp exp) ∶ low → ⊢ (ass x exp)
+  asgnh : ∀ {x exp} → dom x ≡ high → ⊢ (x ≔ exp)
+  asgnl : ∀ {x exp} → ⊢ (aexp exp) ∶ low → ⊢ (x ≔ exp)
   seq   : ∀ {s₁ s₂} → ⊢ s₁ → ⊢ s₂ → ⊢ (comp s₁ s₂)
   while : ∀ {b s} → ⊢ (bexp b) ∶ low → ⊢ s → ⊢ (while b do s od)
   ite   : ∀ {b s₁ s₂} → ⊢ (bexp b) ∶ low → ⊢ s₁ → ⊢ s₂ → ⊢ if b then s₁ else s₂ fi
@@ -71,7 +71,7 @@ record slb {ℓ} (_R_ : Rel SVec ℓ) : Set ℓ where
     sym : ∀ L L' → L R L' → L' R L
     len : ∀ L L' → L R L' → length L ≡ length L'
     sim : ∀ (L₁ L₁' L : SVec) (S : Stmt ⊎ Stop) (σ₁ σ₂ σ₁' : State) i (p : i < length L₁)
-          → (⟨ lookup L₁ i p , σ₁ ⟩→ L ⟨ S , σ₂ ⟩ × L₁ R L₁' × σ₁ =ₗ σ₁')
+          → ⟨ lookup L₁ i p , σ₁ ⟩→ L ⟨ S , σ₂ ⟩ → L₁ R L₁' → σ₁ =ₗ σ₁'
           → ∃ \ (L' : SVec) → ∃ \ (S' : Stmt ⊎ Stop) →  ∃ \s → ∃ \ s' →  ∃ \ σ₂' → ∃ \ q →
               (⟨ lookup L₁' i q , σ₁' ⟩→ L' ⟨ S' , σ₂' ⟩
               × (S ≡ inj₂ [] ⊎ (S ≡ inj₁ s × S' ≡ inj₁ s' × [ s ] R [ s' ]))
@@ -85,13 +85,13 @@ data _≈_ : Rel SVec (Level.suc Level.zero) where
    contained : ∀ {L L'} (_R_ : Rel SVec Level.zero) → slb _R_ → L R L' → L ≈ L'
 
    
-≈-slb-sim : ∀ L₁ L₁' L S σ₁ σ₂ σ₁' i (p : i < length L₁) → (⟨ lookup L₁ i p , σ₁ ⟩→ L ⟨ S , σ₂ ⟩ × L₁ ≈ L₁' × σ₁ =ₗ σ₁')
+≈-slb-sim : ∀ L₁ L₁' L S σ₁ σ₂ σ₁' i (p : i < length L₁) → ⟨ lookup L₁ i p , σ₁ ⟩→ L ⟨ S , σ₂ ⟩ → L₁ ≈ L₁' → σ₁ =ₗ σ₁'
             → ∃ \ L' →  ∃ \ S' → ∃ \ s →  ∃ \ s' → ∃ \ σ₂' → ∃ \q →
             ⟨ lookup L₁' i q , σ₁' ⟩→ L' ⟨ S' , σ₂' ⟩
             × (S ≡ inj₂ [] ⊎ S ≡ inj₁ s × S' ≡ inj₁ s' × [ s ] ≈ [ s' ])
             × L ≈ L' × σ₂ =ₗ σ₂'
-≈-slb-sim L₁ L₁' L S σ₁ σ₂ σ₁' i p (step , contained R slb L₁RL₁' , σ₁=ₗσ₁')
-  with slb.sim slb L₁ L₁' L S σ₁ σ₂ σ₁' i p (step , L₁RL₁' , σ₁=ₗσ₁')
+≈-slb-sim L₁ L₁' L S σ₁ σ₂ σ₁' i p step (contained R slb L₁RL₁') σ₁=ₗσ₁'
+  with slb.sim slb L₁ L₁' L S σ₁ σ₂ σ₁' i p step L₁RL₁' σ₁=ₗσ₁'
 ... | L' , S' , s , s' , σ₂' , q , L₁→S' , inj₁ S≡[] , LRL' , σ₂=ₗσ₂'
     = L' , S' , s , s' , σ₂' , q , L₁→S' , inj₁ S≡[] , contained R slb LRL' , σ₂=ₗσ₂'
 ... | L' , S' , s , s' , σ₂' , q , L₁→S' , inj₂ (S≡s , S'≡s' , sRs') , LRL' , σ₂=ₗσ₂'
@@ -101,3 +101,33 @@ data _≈_ : Rel SVec (Level.suc Level.zero) where
 ≈-is-a-slb = record { sym = λ {L L' (contained R s LRL') → contained R s (slb.sym s L L' LRL')};
                       len = λ {L L' (contained R s LRL') → slb.len s L L' LRL'};
                       sim = ≈-slb-sim }
+
+-- ≈-not-refl : ∀ (L : SVec) → L ≈ L → ⊥
+-- ≈-not-refl L L≈L = ?
+
+-- ≈-trans : Transitive _≈_
+-- ≈-trans L₁≈L₂ L₂≈L₃  = {!!}
+
+
+module strong-security-skip where
+
+  data _R_ : Rel SVec Level.zero where
+    refl-skip : [ skip ] R [ skip ]
+    empty     : [] R []
+
+  ss-skip : [ skip ] ≈ [ skip ]
+  ss-skip = contained _R_ (record { sym = λ { (skip ∷ []) (skip ∷ []) refl-skip → refl-skip;
+                                              []          []          empty     → empty
+                                            };
+                                    len = λ { (skip ∷ []) (skip ∷ []) refl-skip → refl;
+                                              []          []          empty     → refl
+                                            };
+                                    sim = λ { (skip ∷ []) (skip ∷ []) [] (inj₂ []) σ₁ .σ₁ σ₁' 0 p (skip .σ₁) refl-skip σ₁=ₗσ₁'
+                                                → [] , (inj₂ []) , skip , skip , σ₁' , (s≤s z≤n) , skip σ₁' , inj₁ refl , empty , σ₁=ₗσ₁';
+                                              [] [] L S σ₁ σ₂ σ₁' i () L₁→S empty σ₁=ₗσ₁';
+                                              (skip ∷ []) (skip ∷ []) L (inj₁ S) σ₁ σ₂ σ₁' 0 p () refl-skip σ₁=ₗσ₁';
+                                              (skip ∷ []) (skip ∷ []) (s ∷ ss) S σ₁ σ₂ σ₁' 0 p () refl-skip σ₁=ₗσ₁';
+                                              (skip ∷ []) (skip ∷ []) L S σ₁ σ₂ σ₁' (ℕ.suc n) (s≤s ()) L₁→S refl-skip σ₁=ₗσ₁'
+                                               }
+                                   })
+                      refl-skip
