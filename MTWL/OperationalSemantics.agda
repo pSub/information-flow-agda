@@ -24,7 +24,7 @@ data BExp : Set where
 
 data Exp : Set where
   skip : Exp
-  ass : Var → AExp → Exp
+  _≔_ : Var → AExp → Exp
   comp : Exp → Exp → Exp
   if_then_else_fi : BExp → Exp → Exp → Exp
   while_do_od : BExp → Exp → Exp
@@ -64,7 +64,7 @@ _⇓_ {{eval}} = Eval._⇓_ eval
 
 data ⟨_⟩→_⟨_⟩ : Exp × State → SVec → Config → Set where
   skip   : ∀ σ → ⟨ skip , σ ⟩→ [] ⟨ inj₂ [] , σ ⟩
-  ass    : ∀ σ v a z → (a , σ) ⇓₁ z → ⟨ ass v a , σ ⟩→ [] ⟨ inj₂ [] , (λ x → if x == v then z else (σ x)) ⟩
+  ass    : ∀ σ v a z → (a , σ) ⇓₁ z → ⟨ v ≔ a , σ ⟩→ [] ⟨ inj₂ [] , (λ x → if x == v then z else (σ x)) ⟩
   comp₁  : ∀ σ σ' s₁ s₂ α → ⟨ s₁ , σ ⟩→ α ⟨ inj₂ [] , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→ α ⟨ inj₁ s₂ , σ' ⟩
   comp₂  : ∀ σ σ' s₁ s₁' s₂ α → ⟨ s₁ , σ ⟩→ α ⟨ inj₁ s₁' , σ' ⟩ → ⟨ comp s₁ s₂ , σ ⟩→ α ⟨ inj₁ (comp s₁' s₂) , σ' ⟩
   if₁    : ∀ σ s₁ s₂ b → (b , σ) ⇓₂ true → ⟨ if b then s₁ else s₂ fi , σ ⟩→ [] ⟨ inj₁ s₁ , σ ⟩
